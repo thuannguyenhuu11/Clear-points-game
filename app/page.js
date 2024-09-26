@@ -2,24 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 
-const Circle = ({ number, position, handleClick, isClicked }) => {
-  return (
-    <div
-      className={`absolute w-12 h-12 rounded-full flex justify-center items-center border-2 border-black text-lg cursor-pointer transition-transform duration-300 ${
-        isClicked ? 'bg-red-500 opacity-0 pointer-events-none' : 'bg-white'
-      }`}
-      style={{
-        top: `${position.top}%`,
-        left: `${position.left}%`,
-        zIndex: 100 - number,
-        transition: isClicked ? 'background-color 0s, opacity 2s ease-in-out 2s' : 'none',
-      }}
-      onClick={() => handleClick(number)}
-    >
-      {number}
-    </div>
-  );
-};
+const Circle = ({ number, position, handleClick, isClicked }) => (
+  <div
+    className={`absolute w-12 h-12 rounded-full flex justify-center items-center border-2 border-black text-lg cursor-pointer transition-transform duration-300 ${
+      isClicked ? 'bg-red-500 opacity-0 pointer-events-none' : 'bg-white'
+    }`}
+    style={{
+      top: `${position.top}%`,
+      left: `${position.left}%`,
+      zIndex: 100 - number,
+      transition: isClicked ? 'background-color 0s, opacity 2s ease-in-out 2s' : 'none',
+    }}
+    onClick={() => handleClick(number)}
+  >
+    {number}
+  </div>
+);
 
 export default function Home() {
   const [points, setPoints] = useState(0); // Number of circles
@@ -38,14 +36,11 @@ export default function Home() {
   }, [timerOn]);
 
   const generateCircles = () => {
-    const newCircles = [];
-    for (let i = 1; i <= points; i++) {
-      newCircles.push({
-        number: i,
-        position: { top: Math.random() * 88, left: Math.random() * 88 }, // Generate random position within 88%
-        isClicked: false,
-      });
-    }
+    const newCircles = Array.from({ length: points }, (_, i) => ({
+      number: i + 1,
+      position: { top: Math.random() * 88, left: Math.random() * 88 }, // Generate random position within 88%
+      isClicked: false,
+    }));
     setCircles(newCircles);
     setClickedOrder([]); // Reset click order
     setTime(0); // Reset time
@@ -58,8 +53,7 @@ export default function Home() {
     if (gameStatus || !gameStarted) return; // Do nothing if game is over or not started
     if (number === clickedOrder.length + 1) {
       // Check click order
-      const newCircles = circles.map(circle => (circle.number === number ? { ...circle, isClicked: true } : circle));
-      setCircles(newCircles);
+      setCircles(circles.map(circle => (circle.number === number ? { ...circle, isClicked: true } : circle)));
       setClickedOrder([...clickedOrder, number]);
 
       if (number === points) {
@@ -73,7 +67,7 @@ export default function Home() {
   };
 
   const handlePointsChange = e => {
-    const newPoints = parseInt(e.target.value);
+    const newPoints = parseInt(e.target.value, 10);
     setPoints(newPoints);
     setGameStatus(null); // Reset game status if points are valid
   };
@@ -87,7 +81,7 @@ export default function Home() {
   return (
     <div className="text-center mt-10 flex flex-col items-center">
       <div className="flex flex-col items-start w-[400px]">
-        <div className="flex items-center ">
+        <div className="flex items-center">
           <h1
             className={`text-2xl font-bold mb-4 ${
               gameStatus === 'win' ? 'text-green-500' : gameStatus === 'lose' ? 'text-red-500' : ''
@@ -113,10 +107,7 @@ export default function Home() {
           <span className="ml-[100px]">{time.toFixed(1)}s</span>
         </div>
 
-        <button
-          onClick={handleGameStart}
-          className="px-12 py-1 border-2 rounded-full bg-gray-300 text-black rounded-md"
-        >
+        <button onClick={handleGameStart} className="px-12 py-1 border-2 rounded-full bg-gray-300 text-black">
           {gameStarted ? 'Restart' : 'Play'}
         </button>
       </div>
