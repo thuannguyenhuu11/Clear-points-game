@@ -1,101 +1,137 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState, useEffect } from 'react';
+
+const Circle = ({ number, position, handleClick, isClicked }) => {
+  return (
+    <div
+      className={`absolute w-12 h-12 rounded-full flex justify-center items-center border-2 border-black text-lg cursor-pointer transition-transform duration-300 ${
+        isClicked ? 'bg-red-500 opacity-0 pointer-events-none' : 'bg-white'
+      }`}
+      style={{
+        top: `${position.top}%`,
+        left: `${position.left}%`,
+        zIndex: 100 - number,
+        transition: isClicked ? 'background-color 0s, opacity 2s ease-in-out 2s' : 'none',
+      }}
+      onClick={() => handleClick(number)}
+    >
+      {number}
+    </div>
+  );
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [points, setPoints] = useState(0); // Number of circles
+  const [time, setTime] = useState(0); // Time
+  const [timerOn, setTimerOn] = useState(false); // Start timer
+  const [circles, setCircles] = useState([]); // Array of circles
+  const [clickedOrder, setClickedOrder] = useState([]); // Track click order
+  const [gameStatus, setGameStatus] = useState(null); // Game status: null, win, lose
+  const [gameStarted, setGameStarted] = useState(false); // Game started status
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    if (timerOn) {
+      const interval = setInterval(() => setTime(prevTime => prevTime + 0.1), 100);
+      return () => clearInterval(interval);
+    }
+  }, [timerOn]);
+
+  const generateCircles = () => {
+    const newCircles = [];
+    for (let i = 1; i <= points; i++) {
+      newCircles.push({
+        number: i,
+        position: { top: Math.random() * 88, left: Math.random() * 88 }, // Generate random position within 88%
+        isClicked: false,
+      });
+    }
+    setCircles(newCircles);
+    setClickedOrder([]); // Reset click order
+    setTime(0); // Reset time
+    setTimerOn(true); // Start timer
+    setGameStatus(null); // Reset game status
+    setGameStarted(true); // Game started status
+  };
+
+  const handleCircleClick = number => {
+    if (gameStatus || !gameStarted) return; // Do nothing if game is over or not started
+    if (number === clickedOrder.length + 1) {
+      // Check click order
+      const newCircles = circles.map(circle => (circle.number === number ? { ...circle, isClicked: true } : circle));
+      setCircles(newCircles);
+      setClickedOrder([...clickedOrder, number]);
+
+      if (number === points) {
+        setTimerOn(false); // Stop timer
+        setGameStatus('win'); // Set game status to win
+      }
+    } else {
+      setTimerOn(false); // Stop timer if clicked wrong
+      setGameStatus('lose'); // Set game status to lose
+    }
+  };
+
+  const handlePointsChange = e => {
+    const newPoints = parseInt(e.target.value);
+    setPoints(newPoints);
+    setGameStatus(null); // Reset game status if points are valid
+  };
+
+  const handleGameStart = () => {
+    if (points > 0) {
+      generateCircles(); // Start new game immediately when Play/Restart button is clicked
+    }
+  };
+
+  return (
+    <div className="text-center mt-10 flex flex-col items-center">
+      <div className="flex flex-col items-start w-[400px]">
+        <div className="flex items-center ">
+          <h1
+            className={`text-2xl font-bold mb-4 ${
+              gameStatus === 'win' ? 'text-green-500' : gameStatus === 'lose' ? 'text-red-500' : ''
+            }`}
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {gameStatus === 'win' && 'ALL CLEARED!'}
+            {gameStatus === 'lose' && 'GAME OVER!'}
+            {!gameStatus && "LET'S PLAY"}
+          </h1>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        <div className="mb-4">
+          Points:
+          <input
+            type="number"
+            value={points}
+            onChange={handlePointsChange}
+            className="w-[200px] border-2 border-black rounded-md px-2 py-1 ml-20"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        </div>
+        <div className="mb-4 flex items-center">
+          <span>Time:</span>
+          <span className="ml-[100px]">{time.toFixed(1)}s</span>
+        </div>
+
+        <button
+          onClick={handleGameStart}
+          className="px-12 py-1 border-2 rounded-full bg-gray-300 text-black rounded-md"
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+          {gameStarted ? 'Restart' : 'Play'}
+        </button>
+      </div>
+
+      <div className="relative w-[500px] h-[500px] border-2 border-black mx-auto mt-6">
+        {circles.map(circle => (
+          <Circle
+            key={circle.number}
+            number={circle.number}
+            position={circle.position}
+            isClicked={circle.isClicked}
+            handleClick={handleCircleClick}
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        ))}
+      </div>
     </div>
   );
 }
